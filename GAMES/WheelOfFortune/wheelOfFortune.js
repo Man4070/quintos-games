@@ -8,31 +8,48 @@ let phrases =
 // make an array of phrases and pick a random phrase
 
 phrases = phrases.split("|");
-function startNewGame() {}
-let rand = Math.floor(Math.random() * phrases.length);
-
-let phrase = phrases[rand];
-phrase = phrase.split(" ");
-log(phrase);
-
-// Make phrase array with the words of the phrase
-// Example phrase: ['Community', 'Chest']
-// letters -> [
-//   [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-//   [' ', ' ', ' ', ' ', ' ']
-// ]
-let letters = [];
-for (let i = 0; i < phrase.length; i++) {
-  letters.push([]);
-  for (let j = 0; j < phrase[i].length; j++) {
-    letters[i].push(" ");
-  }
-}
-log(letters);
 
 let buzzerClicked = false;
 let avail = [];
 let points = 0;
+let phrase;
+let letters;
+
+async function startNewGame() {
+  await pc.eraseRect(1, 1, 53, 16);
+
+  let rand = Math.floor(Math.random() * phrases.length);
+
+  phrase = phrases[rand];
+  phrase = phrase.split(" ");
+  log(phrase);
+
+  // Make phrase array with the words of the phrase
+  // Example phrase: ['Community', 'Chest']
+  // letters -> [
+  //   [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+  //   [' ', ' ', ' ', ' ', ' ']
+  // ]
+  letters = [];
+  for (let i = 0; i < phrase.length; i++) {
+    letters.push([]);
+    for (let j = 0; j < phrase[i].length; j++) {
+      if (phrase[i][j] != "-" && phrase[i][j] != "&") {
+        letters[i].push(" ");
+      } else {
+        letters[i].push(phrase[i][j]);
+        pc.text(phrase[i][j], j * 3 + 3, i * 3 + 3);
+      }
+    }
+  }
+  log(letters);
+  displayBoxes();
+  displayScore();
+
+  addLetter();
+}
+
+startNewGame();
 
 /* PART C: display the boxes */
 function displayBoxes() {
@@ -43,22 +60,19 @@ function displayBoxes() {
   }
 }
 
-displayBoxes();
-
 function displayScore() {
   pc.text("Score: " + points, 20, 20);
 }
-
-displayScore();
 
 async function buzz() {
   buzzerClicked = true;
   let guess = await pc.prompt("Guess the phrase", 2, 12);
   buzzerClicked = false;
-  if (guess == phrase.join(" ")) {
+  if (guess && guess.toLowerCase() == phrase.join(" ").toLowerCase()) {
     //  guess was right
     points += avail.length;
     displayScore();
+    startNewGame();
   } else {
     // guess was wrong
     addLetter();
@@ -86,6 +100,8 @@ async function addLetter() {
   }
   log(avail);
   if (avail.length == 0) {
+    await pc.alert("The phrase was " + phrase.join(" "), 2, 12);
+    startNewGame();
     return;
   }
   if (buzzerClicked) {
@@ -100,5 +116,3 @@ async function addLetter() {
 
   addLetter();
 }
-
-addLetter();
