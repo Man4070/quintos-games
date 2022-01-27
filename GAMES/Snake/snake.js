@@ -2,7 +2,7 @@
 // text rows: 18 cols: 20
 
 let score = 0; // number of apples eaten
-let speed = 0.4; // snake speed
+let speed = 0.2; // snake speed
 
 text("SCORE: " + score, 17, 6);
 
@@ -147,16 +147,22 @@ async function moveSnake() {
         type = "curve";
         s.ani("curve");
         if (dirs.includes("up") && dirs.includes("right")) {
-          s.rotation = 0;
+          s.mirrorX(1);
+          s.mirrorY(-1);
         } else if (dirs.includes("up") && dirs.includes("left")) {
-          s.rotation = 270;
+          s.mirrorX(1);
+          s.mirrorY(1);
         } else if (dirs.includes("down") && dirs.includes("right")) {
-          s.rotation = 90;
+          s.mirrorX(-1);
+          s.mirrorY(-1);
         } else {
-          s.rotation = 180;
+          s.mirrorX(-1);
+          s.mirrorY(1);
         }
+        log(dirs);
       } else {
         type = "body";
+        s.rotation = 0;
       }
     }
 
