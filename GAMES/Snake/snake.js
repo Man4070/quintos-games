@@ -2,10 +2,9 @@
 // text rows: 18 cols: 20
 
 let score = 0; // number of apples eaten
-let speed = 0.5; // snake speed
+let speed = 0.4; // snake speed
 
-text("SCORE: " + score, 17, 0);
-text("SPEED: " + score, 17, 11);
+text("SCORE: " + score, 17, 6);
 
 let egg = world.createSprite("egg", 5, 10, 1);
 
@@ -86,7 +85,6 @@ function placeEgg() {
       }
     }
   }
-  log(avail);
   let idx = Math.floor(Math.random() * avail.length);
   let coord = avail[idx];
   egg.row = coord[0];
@@ -96,7 +94,11 @@ function placeEgg() {
 async function moveSnake() {
   let movements = [];
   if (snake[0].row == egg.row && snake[0].col == egg.col) {
-    speed += 0.1;
+    if (speed < 0.5) {
+      speed += 0.1;
+    } else {
+      speed += 0.01;
+    }
     snake.createSprite(
       snake[1].getAnimationLabel(),
       snake[1].row,
@@ -109,6 +111,8 @@ async function moveSnake() {
     snake[0].direction = inputDirection;
     movements.push(snake[0].move(snake[0].direction, speed));
     await Promise.all(movements);
+    score += 1;
+    text("SCORE: " + score, 17, 6);
     placeEgg();
     moveSnake();
     return;
@@ -134,7 +138,29 @@ async function moveSnake() {
       s.direction = snake[i - 1].direction;
     }
 
-    changeSnakeAni(s, type, s.direction);
+    if (type == "body" || type == "curve") {
+      let prevDir = snake[i - 1].direction;
+      let nextDir = snake[i + 1].direction;
+
+      if (prevDir != nextDir) {
+        let dirs = [prevDir, nextDir];
+        type = "curve";
+        s.ani("curve");
+        if (dirs.includes("up") && dirs.includes("right")) {
+          s.rotation = 0;
+        } else if (dirs.includes("up") && dirs.includes("left")) {
+          s.rotation = 270;
+        } else if (dirs.includes("down") && dirs.includes("right")) {
+          s.rotation = 90;
+        } else {
+          s.rotation = 180;
+        }
+      } else {
+        type = "body";
+      }
+    }
+
+    if (type != "curve") changeSnakeAni(s, type, s.direction);
 
     if (type == "head" || type == "eat") {
       movements.push(s.move(s.direction, speed));
