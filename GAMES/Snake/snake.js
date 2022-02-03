@@ -46,7 +46,7 @@ pipes.createSprite("pipe-bottomRight", 14, 19, 1);
 
 let inputDirection = "up";
 
-snake.createSprite("head-up", 11, 2, 2).direction = "up";
+snake.createSprite("head-up", 11, 2, 3).direction = "up";
 snake.createSprite("body-up", 12, 2, 2).direction = "up";
 snake.createSprite("tail-up", 13, 2, 2).direction = "up";
 
@@ -91,8 +91,40 @@ function placeEgg() {
   egg.col = coord[1];
 }
 
+let tailIndex = 2;
+
 async function moveSnake() {
   let movements = [];
+
+  let prevDir = snake[0].direction;
+  let nextDir = inputDirection;
+
+  if (prevDir != nextDir) {
+    let s = snake.createSprite("curve", snake[0].row, snake[0].col, 2);
+    if (
+      (prevDir == "up" && nextDir == "right") ||
+      (prevDir == "left" && nextDir == "down")
+    ) {
+      s.mirrorX(1);
+      s.mirrorY(-1);
+    } else if (
+      (prevDir == "up" && nextDir == "left") ||
+      (prevDir == "right" && nextDir == "down")
+    ) {
+      s.mirrorX(-1);
+      s.mirrorY(-1);
+    } else if (
+      (prevDir == "down" && nextDir == "right") ||
+      (prevDir == "left" && nextDir == "up")
+    ) {
+      s.mirrorX(1);
+      s.mirrorY(1);
+    } else {
+      s.mirrorX(-1);
+      s.mirrorY(1);
+    }
+  }
+
   if (snake[0].row == egg.row && snake[0].col == egg.col) {
     if (speed < 0.5) {
       speed += 0.1;
@@ -105,6 +137,7 @@ async function moveSnake() {
       snake[1].col,
       2
     );
+    tailIndex += 1;
     snake.splice(1, 0, snake.pop());
     snake[1].direction = snake[0].direction;
     movements.push(snake[1].move(snake[1].direction, speed));
@@ -117,7 +150,7 @@ async function moveSnake() {
     moveSnake();
     return;
   }
-  for (let i = snake.toArray().length - 1; i >= 0; i--) {
+  for (let i = tailIndex; i >= 0; i--) {
     let s = snake[i];
     // move the snake
     let type = s.getAnimationLabel().split("-")[0];
@@ -138,35 +171,7 @@ async function moveSnake() {
       s.direction = snake[i - 1].direction;
     }
 
-    if (type == "body" || type == "curve") {
-      let prevDir = snake[i - 1].direction;
-      let nextDir = snake[i + 1].direction;
-
-      if (prevDir != nextDir) {
-        let dirs = [prevDir, nextDir];
-        type = "curve";
-        s.ani("curve");
-        if (dirs.includes("up") && dirs.includes("right")) {
-          s.mirrorX(1);
-          s.mirrorY(-1);
-        } else if (dirs.includes("up") && dirs.includes("left")) {
-          s.mirrorX(1);
-          s.mirrorY(1);
-        } else if (dirs.includes("down") && dirs.includes("right")) {
-          s.mirrorX(-1);
-          s.mirrorY(-1);
-        } else {
-          s.mirrorX(-1);
-          s.mirrorY(1);
-        }
-        log(dirs);
-      } else {
-        type = "body";
-        s.rotation = 0;
-      }
-    }
-
-    if (type != "curve") changeSnakeAni(s, type, s.direction);
+    changeSnakeAni(s, type, s.direction);
 
     if (type == "head" || type == "eat") {
       movements.push(s.move(s.direction, speed));
