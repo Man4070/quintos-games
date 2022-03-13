@@ -207,6 +207,43 @@ async function moveSnake() {
     } else {
       speed += 0.01;
     }
+
+    if (reverseMode == true) {
+      let newDirections = [];
+      for (let i = 0, j = tailIndex; i <= tailIndex; i++, j--) {
+        let si = snake[i];
+        let sj = snake[j];
+
+        if (i <= Math.floor(tailIndex / 2)) {
+          let siRow = si.row;
+          let siCol = si.col;
+          si.row = sj.row;
+          si.col = sj.col;
+          sj.row = siRow;
+          sj.col = siCol;
+        }
+
+        if (sj.direction == "up") {
+          newDirections.push("down");
+        } else if (sj.direction == "down") {
+          newDirections.push("up");
+        } else if (sj.direction == "left") {
+          newDirections.push("right");
+        } else if (sj.direction == "right") {
+          newDirections.push("left");
+        }
+      }
+
+      for (let i = 0; i < tailIndex; i++) {
+        let s = snake[i];
+        let type = s.getAnimationLabel().split("-")[0];
+        s.direction = newDirections[i + 1];
+        changeSnakeAni(s, type, s.direction);
+      }
+
+      inputDirection = newDirections[0];
+    }
+
     snake.createSprite(
       snake[1].getAnimationLabel(),
       snake[1].row,
@@ -217,32 +254,8 @@ async function moveSnake() {
     snake.splice(1, 0, snake.pop());
     snake[1].direction = snake[0].direction;
 
-    if (reverseMode == true) {
-      let headRow = snake[0].row;
-      let headCol = snake[0].col;
-      snake[0].row = snake[tailIndex].row;
-      snake[0].col = snake[tailIndex].col;
-      snake[tailIndex].row = headRow;
-      snake[tailIndex].col = headCol;
-
-      for (let i = 0, j = tailIndex; i < snake.length; i++, j--) {
-        if (snake[j].direction == "up") {
-          snake[i].direction = "down";
-        } else if (snake[j].direction == "down") {
-          snake[i].direction = "up";
-        } else if (snake[j].direction == "left") {
-          snake[i].direction = "right";
-        } else if (snake[j].direction == "right") {
-          snake[i].direction = "left";
-        }
-      }
-      inputDirection = snake[0].direction;
-    }
-
     movements.push(snake[1].move(snake[1].direction, speed));
-    if (!reverseMode) {
-      snake[0].direction = inputDirection;
-    }
+    snake[0].direction = inputDirection;
     movements.push(snake[0].move(snake[0].direction, speed));
     await Promise.all(movements);
     score += 1;
